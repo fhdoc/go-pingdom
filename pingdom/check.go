@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"strconv"
+	"os"
 )
 
 // CheckService provides an interface to Pingdom checks
@@ -23,7 +24,7 @@ type Check interface {
 // This returns type CheckResponse rather than Check since the
 // pingdom API does not return a complete representation of a check.
 func (cs *CheckService) List() ([]CheckResponse, error) {
-	req, err := cs.client.NewRequest("GET", "/api/2.0/checks", nil)
+	req, err := cs.client.NewRequest("GET", "/api/2.1/checks", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -46,6 +47,43 @@ func (cs *CheckService) List() ([]CheckResponse, error) {
 	return m.Checks, err
 }
 
+func (cs *CheckService) ListTms() ([]CheckTmsResponse, error) {
+        req, err := cs.client.NewRequest("GET", "/api/2.1/tms.recipes", nil)
+        if err != nil {
+                return nil, err
+        }
+
+        resp, err := cs.client.client.Do(req)
+        if err != nil {
+                return nil, err
+        }
+        defer resp.Body.Close()
+
+        if err := validateResponse(resp); err != nil {
+                return nil, err
+        }
+
+        bodyBytes, _ := ioutil.ReadAll(resp.Body)
+        bodyString := string(bodyBytes)
+        m := &listTmsChecksJsonResponse{}
+        err = json.Unmarshal([]byte(bodyString), &m)
+
+        return m.Checks, err
+}
+
+func (cs *CheckService) ListFromJson() ([]CheckResponse, error) {
+	jsonFileChecks, err := os.Open("/Users/f.hermand/go/src/github.com/fhdoc/PdPush/pingdom/checklist.json")
+        if err != nil {
+                return nil, err
+        }
+
+	byteValue, _ := ioutil.ReadAll(jsonFileChecks)
+        //bodyString := string(byteValue)
+        m := &listChecksJsonResponse{}
+        err = json.Unmarshal(byteValue, &m)
+
+        return m.Checks, err
+}
 // Create a new check. This function will validate the given check param
 // to ensure that it contains correct values before submitting the request
 // Returns a CheckResponse object representing the response from Pingdom.
@@ -56,7 +94,7 @@ func (cs *CheckService) Create(check Check) (*CheckResponse, error) {
 		return nil, err
 	}
 
-	req, err := cs.client.NewRequest("POST", "/api/2.0/checks", check.PostParams())
+	req, err := cs.client.NewRequest("POST", "/api/2.1/checks", check.PostParams())
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +111,7 @@ func (cs *CheckService) Create(check Check) (*CheckResponse, error) {
 // This returns type CheckResponse rather than Check since the
 // pingdom API does not return a complete representation of a check.
 func (cs *CheckService) Read(id int) (*CheckResponse, error) {
-	req, err := cs.client.NewRequest("GET", "/api/2.0/checks/"+strconv.Itoa(id), nil)
+	req, err := cs.client.NewRequest("GET", "/api/2.1/checks/"+strconv.Itoa(id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +133,7 @@ func (cs *CheckService) Update(id int, check Check) (*PingdomResponse, error) {
 		return nil, err
 	}
 
-	req, err := cs.client.NewRequest("PUT", "/api/2.0/checks/"+strconv.Itoa(id), check.PutParams())
+	req, err := cs.client.NewRequest("PUT", "/api/2.1/checks/"+strconv.Itoa(id), check.PutParams())
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +148,7 @@ func (cs *CheckService) Update(id int, check Check) (*PingdomResponse, error) {
 
 // DeleteCheck will delete the check for the given ID.
 func (cs *CheckService) Delete(id int) (*PingdomResponse, error) {
-	req, err := cs.client.NewRequest("DELETE", "/api/2.0/checks/"+strconv.Itoa(id), nil)
+	req, err := cs.client.NewRequest("DELETE", "/api/2.1/checks/"+strconv.Itoa(id), nil)
 	if err != nil {
 		return nil, err
 	}

@@ -38,9 +38,20 @@ type CheckResponse struct {
 	LastResponseTime         int64             `json:"lastresponsetime,omitempty"`
 	Paused                   bool              `json:"paused,omitempty"`
 	ContactIds               []int             `json:"contactids,omitempty"`
-	IntegrationIds           []int             `json:"integrationids,omitempty"`
+        Tags                     []map[string]string           `json:"tags,omitempty"`
+        IntegrationIds           []int             `json:"integrationids"`
+        TeamIds                  []int             `json:"teamids"`
 	Type                     CheckResponseType `json:"type,omitempty"`
+	Probe_Filters     	 []string 	   `json:"probe_filters,omitempty"`
 }
+
+type CheckTmsResponse struct {
+	ID			int		`json:"recipes"`
+	Name			string		`json:"name"`
+	Status			string		`json:"status"`
+	Active			string		`json:"active"`
+}
+
 
 type CheckResponseType struct {
 	Name string                    `json:"-"`
@@ -133,4 +144,8 @@ type listContactsJsonResponse struct {
 
 type errorJsonResponse struct {
 	Error *PingdomError `json:"error"`
+}
+
+type listTmsChecksJsonResponse struct {
+        Checks []CheckTmsResponse `json:"recipes"`
 }
